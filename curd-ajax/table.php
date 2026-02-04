@@ -53,8 +53,8 @@
                             </div>
                         </td>
                         <td>
-                            <button id="btnEdit" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#exampleModal">Edit</button>
-                            <button type="button" class="btn btn-danger" id="btnDelete">Delete</button>
+                            <button class="btn btn-warning btnEdit" data-bs-toggle="modal" data-bs-target="#exampleModal">Edit</button>
+                            <button class="btn btn-danger btnDelete">Delete</button>
                         </td>
                     </tr>
                 <?php } ?>
@@ -87,7 +87,7 @@
                             <input name="file" id="file" type="file">
                             <div class="modal-footer">
                                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                                <button name="btnEdit" id="update" type="button" class="btn btn-warning">Update</button>
+                                <button name="btnEdit" id="update" type="button" class="btn btn-warning"  data-bs-dismiss="modal">Update</button>
                                 <button name="btnAdd" id="btnAdd" type="button" class="btn btn-primary" data-bs-dismiss="modal">Add</button>
                             </div>
                         </form>
@@ -104,137 +104,153 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js" integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <script>
         $(document).ready(function() {
-            $('#file').hide()
+            $('#file').hide();
+
             $('#img').click(function() {
-                $('#file').click()
-            })
+                $('#file').click();
+            });
+
             $('#file').change(function() {
                 const file = this.files[0];
                 if (file) {
-                    const image = URL.createObjectURL(file);
-                    $('#img').attr('src', image);
+                    $('#img').attr('src', URL.createObjectURL(file));
                 }
-            })
+            });
 
-            $("#btnAdd").click(function() {
+            // ADD STUDENT 
+            $('#addStudent').click(function() {
+                $('#update').hide();
+                $('#btnAdd').show();
+                $('#form')[0].reset();
+                $('#img').attr('src', 'https://i.pinimg.com/736x/9d/16/4e/9d164e4e074d11ce4de0a508914537a8.jpg');
+            });
+
+            // INSERT
+            $('#btnAdd').click(function() {
                 const file = $('#file')[0].files[0];
                 const username = $('#username').val();
                 const gender = $('#gender').val();
-                const imgUrl = URL.createObjectURL(file);
-                let formData = new FormData;
+
+                let formData = new FormData();
                 formData.append('username', username);
                 formData.append('gender', gender);
                 formData.append('file', file);
+
                 $.ajax({
                     url: "insert.php",
-                    method: "post",
+                    method: "POST",
                     data: formData,
                     contentType: false,
                     processData: false,
-                    success: function(res) {
-                        alert('Student added');
-                        console.log(res);
+                    success: function(id) {
+                        const imgUrl = URL.createObjectURL(file);
+
                         $('tbody').append(`
-                                <td>${res}</td>
-                                        <td>${username}</td>
-                                        <td>${gender}</td>
-                                        <td>
-                                            <div class="card text-center w-50">
-                                                <div class="card-img-top d-flex align-items-center justify-content-center"
-                                                    style="height: 100px;">
-                                                    <img src="${imgUrl}"
-                                                        alt=""
-                                                        style="max-height:100%;
-                                                    width:100%
-                                                    " />
-                                                </div>
-                                            </div>
-                                        <td>
-                                            <button class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#exampleModal">Edit</button>
-                                            <button type="button" class="btn btn-danger" id="btnDelete">Delete</button>
-                                        </td>
-                                </td>
-                            `)
-                        $('#form').trigger('reset')
-                    },
-                    error: function(err) {
-                        console.log(err);
+                    <tr>
+                        <td>${id}</td>
+                        <td>${username}</td>
+                        <td>${gender}</td>
+                        <td>
+                            <div class="card text-center w-50">
+                                <div class="card-img-top d-flex align-items-center justify-content-center" style="height:100px;">
+                                    <img src="${imgUrl}" style="max-height:100%; width:100%;">
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <button class="btn btn-warning btnEdit" data-bs-toggle="modal" data-bs-target="#exampleModal">Edit</button>
+                            <button class="btn btn-danger btnDelete">Delete</button>
+                        </td>
+                    </tr>
+                `);
+
+                        $('#exampleModal').modal('hide');
+                        $('#form')[0].reset();
                     }
                 });
             });
-            $(document).on('click', '#btnDelete', function() {
-                const comfirn = confirm('Are you sure to Delete');
+
+            // DELETE
+            $(document).on('click', '.btnDelete', function() {
+                if (!confirm('Are you sure?')) return;
+
                 const row = $(this).closest('tr');
-                const id = row.find('td:eq(0)').text().trim()
+                const id = row.find('td:eq(0)').text().trim();
+
                 let formData = new FormData();
                 formData.append('id', id);
-                console.log(id);
-                if (comfirn) {
-                    $.ajax({
-                        url: "delete.php",
-                        method: "post",
-                        data: formData,
-                        contentType: false,
-                        processData: false,
-                        success: function(res) {
-                            alert('Student Delete');
-                            row.remove();
-                            console.log(res);
-                        },
-                        error: function(err) {
-                            console.log(err);
-                        }
-                    });
-                }
-            })
-        })
-        $('#addStudent').click(function() {
-            $('#update').hide()
-            $('#btnAdd').show()
-        })
-        $(document).on('click', '#btnEdit', function() {
-            $('#btnAdd').hide()
-            $('#update').show()
 
-
-            const row = $(this).closest('tr');
-            const id = row.find('td:eq(0)').text().trim();
-            const username = row.find('td:eq(1)').text().trim();
-            const gender = row.find('td:eq(2)').text().trim();
-            const file = row.find('td:eq(3)').text().trim();
-            const imgUrl = URL.createObjectURL(file);
-            const formData = new FormData;
-            formData.append('id', id);
-            formData.append('username', username);
-            formData.append('gender', gender);
-            formData.append('file', file);
-
-            $('#username').val(username)
-            $('#gender').val(gender);
-
-
-            $.ajax({
-                url: "delete.php",
-                method: "post",
-                data: formData,
-                contentType: false,
-                processData: false,
-                success: function(res) {
-                    if (row.find('td:eq(0)').text().trim() == id) {
-                        row.find('td:eq(1)').text(username)
-                        row.find('td:eq(2)').text(gender)
-                        row.find('td:eq(3) img').attr('src', imgurl)
+                $.ajax({
+                    url: "delete.php",
+                    method: "POST",
+                    data: formData,
+                    contentType: false,
+                    processData: false,
+                    success: function() {
+                        row.remove();
                     }
-                },
-                error: function(err) {
-                    console.log(err);
+                });
+            });
+
+            // EDIT 
+            $(document).on('click', '.btnEdit', function() {
+                $('#btnAdd').hide();
+                $('#update').show();
+
+                const row = $(this).closest('tr');
+
+                const id = row.find('td:eq(0)').text().trim();
+                const username = row.find('td:eq(1)').text().trim();
+                const gender = row.find('td:eq(2)').text().trim();
+                const imgSrc = row.find('td:eq(3) img').attr('src');
+
+                $('#username').val(username);
+                $('#gender').val(gender);
+                $('#img').attr('src', imgSrc);
+
+                $('#update').data('row', row);
+                $('#update').data('id', id);
+            });
+
+            // UPDATE
+            $('#update').click(function() {
+                const row = $(this).data('row');
+                const id = $(this).data('id');
+
+                const username = $('#username').val();
+                const gender = $('#gender').val();
+                const file = $('#file')[0].files[0];
+
+                let formData = new FormData();
+                formData.append('id', id);
+                formData.append('username', username);
+                formData.append('gender', gender);
+
+                if (file) {
+                    formData.append('file', file);
                 }
-            })
 
+                $.ajax({
+                    url: "update.php",
+                    method: "POST",
+                    data: formData,
+                    contentType: false,
+                    processData: false,
+                    success: function() {
+                        row.find('td:eq(1)').text(username);
+                        row.find('td:eq(2)').text(gender);
 
+                        if (file) {
+                            row.find('td:eq(3) img').attr('src', URL.createObjectURL(file));
+                        }
+                        alert('Update success');
+                    }
+                });
+            });
 
-        })
+        });
     </script>
+
 </body>
 
 </html>
